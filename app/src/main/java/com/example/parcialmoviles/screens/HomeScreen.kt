@@ -20,6 +20,8 @@ import com.example.parcialmoviles.components.header.Header
 import com.example.parcialmoviles.model.Task
 import com.example.parcialmoviles.repository.TaskRepository
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.example.parcialmoviles.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,8 +29,6 @@ fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
     val taskRepository = remember { TaskRepository(context) }
     val coroutineScope = rememberCoroutineScope()
-
-    // Estados principales
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var completedTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var pendingTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
@@ -38,13 +38,9 @@ fun HomeScreen(navController: NavController) {
     var priorityCounts by remember { mutableStateOf(mapOf("low" to 0, "medium" to 0, "high" to 0)) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
-
-    // Estados para filtros
     var searchQuery by remember { mutableStateOf("") }
     var completedFilter by remember { mutableStateOf<Boolean?>(null) }
     var ordering by remember { mutableStateOf<String?>(null) }
-
-    // Estados para diálogos
     var showToggleConfirmationDialog by remember { mutableStateOf(false) }
     var taskToToggle by remember { mutableStateOf<Task?>(null) }
     var isUpdatingTask by remember { mutableStateOf(false) }
@@ -109,7 +105,6 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // Funciones para manejar tareas (toggle y delete)
     fun handleToggleTaskCompletion(task: Task) {
         taskToToggle = task
         showToggleConfirmationDialog = true
@@ -129,10 +124,10 @@ fun HomeScreen(navController: NavController) {
                         pendingTasks = tasks.filter { !it.completed }
                         loadPriorityCounts()
                     }.onFailure { exception ->
-                        error = "Error al actualizar la tarea: ${exception.message}"
+                        error = context.getString(R.string.update_task_error, exception.message)
                     }
                 } catch (e: Exception) {
-                    error = "Error al actualizar la tarea: ${e.message}"
+                    error = context.getString(R.string.update_task_error, e.message)
                 } finally {
                     isUpdatingTask = false
                     showToggleConfirmationDialog = false
@@ -171,7 +166,6 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // Cargar tareas iniciales y cuando cambian los filtros
     LaunchedEffect(Unit) {
         loadTasks(1)
     }
@@ -185,7 +179,7 @@ fun HomeScreen(navController: NavController) {
             FloatingActionButton(
                 onClick = { navController.navigate("task_creation") }
             ) {
-                Icon(Icons.Default.Add, "Añadir tarea")
+                Icon(Icons.Default.Add, stringResource(R.string.add_task))
             }
         },
         content = { innerPadding ->
@@ -195,10 +189,8 @@ fun HomeScreen(navController: NavController) {
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp)
             ) {
-                // Header
                 Header(name = "Luis Alejandro", pendingTasks = pendingTasks.size)
 
-                // Componente de filtros
                 FilterBar(
                     searchQuery = searchQuery,
                     onSearchQueryChange = { searchQuery = it },
@@ -206,12 +198,11 @@ fun HomeScreen(navController: NavController) {
                     onCompletedFilterChange = { completedFilter = it },
                     ordering = ordering,
                     onOrderingChange = { ordering = it },
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 6.dp, top = 6.dp)
                 )
 
-                // Sección de Prioridad
                 Text(
-                    text = "Prioridad",
+                    text = stringResource(R.string.priority),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -224,19 +215,22 @@ fun HomeScreen(navController: NavController) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     PriorityCard(
-                        title = "Alta",
+                        title = stringResource(R.string.high_priority),
                         count = priorityCounts["high"]?.toString() ?: "0",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.errorContainer
                     )
                     PriorityCard(
-                        title = "Media",
+                        title = stringResource(R.string.medium_priority),
                         count = priorityCounts["medium"]?.toString() ?: "0",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.tertiaryContainer
                     )
                     PriorityCard(
-                        title = "Baja",
+                        title = stringResource(R.string.low_priority),
                         count = priorityCounts["low"]?.toString() ?: "0",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.primaryContainer
                     )
                 }
 
@@ -246,7 +240,7 @@ fun HomeScreen(navController: NavController) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     } else if (error != null) {
                         Text(
-                            text = "Error: $error",
+                            text = stringResource(R.string.error_prefix, error ?: ""),
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.align(Alignment.Center)
                         )
@@ -256,7 +250,7 @@ fun HomeScreen(navController: NavController) {
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             if (completedTasks.isNotEmpty()) {
-                                item { TaskSectionHeader(title = "Completadas") }
+                                item { TaskSectionHeader(title = stringResource(R.string.completed_tasks)) }
                                 items(completedTasks) { task ->
                                     TaskCard(
                                         task = task,
@@ -270,7 +264,7 @@ fun HomeScreen(navController: NavController) {
                             }
 
                             if (pendingTasks.isNotEmpty()) {
-                                item { TaskSectionHeader(title = "Por hacer") }
+                                item { TaskSectionHeader(title = stringResource(R.string.pending_tasks)) }
                                 items(pendingTasks) { task ->
                                     TaskCard(
                                         task = task,
@@ -289,11 +283,11 @@ fun HomeScreen(navController: NavController) {
                     }
 
                     if (isUpdatingTask) {
-                        LoadingIndicator(message = "Actualizando tarea...")
+                        LoadingIndicator(message = stringResource(R.string.updating_task))
                     }
 
                     if (isDeletingTask) {
-                        LoadingIndicator(message = "Eliminando tarea...")
+                        LoadingIndicator(message = stringResource(R.string.deleting_task))
                     }
                 }
 
@@ -314,23 +308,23 @@ fun HomeScreen(navController: NavController) {
     // Diálogos de confirmación
     ConfirmationDialog(
         isVisible = showToggleConfirmationDialog,
-        title = "Cambiar estado de tarea",
+        title = stringResource(R.string.toggle_task_title),
         message = taskToToggle?.let { task ->
-            if (task.completed) "¿Marcar '${task.name}' como pendiente?"
-            else "¿Marcar '${task.name}' como completada?"
-        } ?: "¿Cambiar estado de esta tarea?",
-        confirmButtonText = "Confirmar",
-        cancelButtonText = "Cancelar",
+            if (task.completed) stringResource(R.string.mark_as_pending, task.name)
+            else stringResource(R.string.mark_as_completed, task.name)
+        } ?: stringResource(R.string.change_task_state),
+        confirmButtonText = stringResource(R.string.confirm),
+        cancelButtonText = stringResource(R.string.cancel),
         onConfirm = { confirmToggleTaskCompletion() },
         onCancel = { showToggleConfirmationDialog = false; taskToToggle = null }
     )
 
     ConfirmationDialog(
         isVisible = showDeleteConfirmationDialog,
-        title = "Eliminar tarea",
-        message = taskToDelete?.let { "¿Eliminar '${it.name}'?" } ?: "¿Eliminar esta tarea?",
-        confirmButtonText = "Eliminar",
-        cancelButtonText = "Cancelar",
+        title = stringResource(R.string.delete_task_title),
+        message = taskToDelete?.let { stringResource(R.string.delete_task_message, it.name)} ?: stringResource(R.string.delete_task_generic),
+        confirmButtonText = stringResource(R.string.delete),
+        cancelButtonText = stringResource(R.string.cancel),
         onConfirm = { confirmDeleteTask() },
         onCancel = { showDeleteConfirmationDialog = false; taskToDelete = null }
     )
@@ -376,11 +370,11 @@ private fun PaginationControls(
             onClick = onPreviousPage,
             enabled = previousPageUrl != null
         ) {
-            Text("← Anterior")
+            Text(stringResource(R.string.previous))
         }
 
         Text(
-            text = "Página $currentPageNumber",
+            text = stringResource(R.string.page, currentPageNumber),
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium
         )
@@ -389,7 +383,7 @@ private fun PaginationControls(
             onClick = onNextPage,
             enabled = nextPageUrl != null
         ) {
-            Text("Siguiente →")
+            Text(stringResource(R.string.next_page))
         }
     }
 }
@@ -407,7 +401,7 @@ fun TaskSectionHeader(title: String) {
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Ver todas",
+            text = stringResource(R.string.see_all),
             fontSize = 12.sp
         )
     }

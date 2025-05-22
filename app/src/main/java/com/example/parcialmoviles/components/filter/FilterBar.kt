@@ -27,11 +27,10 @@ fun FilterBar(
     var showFilters by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
-
         SearchBar(
             query = searchQuery,
             onQueryChange = onSearchQueryChange,
-            onSearch ={},
+            onSearch = {},
             active = false,
             onActiveChange = {},
             leadingIcon = {
@@ -51,8 +50,11 @@ fun FilterBar(
                 }
             },
             placeholder = { Text(stringResource(R.string.search_tasks)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp)
         ) {}
+
         if (showFilters) {
             FilterOptions(
                 completedFilter = completedFilter,
@@ -68,7 +70,9 @@ fun FilterBar(
         FilterButton(
             showFilters = showFilters,
             onToggleFilters = { showFilters = !showFilters },
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(top = 8.dp)
         )
     }
 }
@@ -89,9 +93,8 @@ private fun FilterOptions(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             Text(
-                text = "Estado",
+                text = stringResource(R.string.status),
                 style = MaterialTheme.typography.labelLarge
             )
             Row(
@@ -100,22 +103,22 @@ private fun FilterOptions(
                 FilterChip(
                     selected = completedFilter == null,
                     onClick = { onCompletedFilterChange(null) },
-                    label = { Text("Todos") }
+                    label = { Text(stringResource(R.string.all)) }
                 )
                 FilterChip(
                     selected = completedFilter == true,
                     onClick = { onCompletedFilterChange(true) },
-                    label = { Text("Completadas") }
+                    label = { Text(stringResource(R.string.completed)) }
                 )
                 FilterChip(
                     selected = completedFilter == false,
                     onClick = { onCompletedFilterChange(false) },
-                    label = { Text("Pendientes") }
+                    label = { Text(stringResource(R.string.pending)) }
                 )
             }
 
             Text(
-                text = "Ordenar por",
+                text = stringResource(R.string.sort_by),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -125,17 +128,17 @@ private fun FilterOptions(
                 FilterChip(
                     selected = ordering == null,
                     onClick = { onOrderingChange(null) },
-                    label = { Text("Predeterminado") }
+                    label = { Text(stringResource(R.string.default_sort)) }
                 )
                 FilterChip(
                     selected = ordering == "-priority",
                     onClick = { onOrderingChange("-priority") },
-                    label = { Text("Alta a baja") }
+                    label = { Text(stringResource(R.string.high_to_low)) }
                 )
                 FilterChip(
                     selected = ordering == "priority",
                     onClick = { onOrderingChange("priority") },
-                    label = { Text("Baja a alta") }
+                    label = { Text(stringResource(R.string.low_to_high)) }
                 )
             }
         }
@@ -158,10 +161,12 @@ private fun FilterButton(
     ) {
         Icon(
             imageVector = Icons.Default.Sort,
-            contentDescription = if (showFilters) "Ocultar filtros" else "Mostrar filtros",
+            contentDescription = if (showFilters) stringResource(R.string.hide_filters)
+            else stringResource(R.string.show_filters),
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(if (showFilters) "Ocultar filtros" else "Filtrar")
+        Text(if (showFilters) stringResource(R.string.hide_filters)
+        else stringResource(R.string.filter))
     }
 }

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Login Screen -->
+    <string name="welcome">Bienvenido</string>
+    <string name="app_subtitle">A tu app ToDoList</string>
+    <string name="email">Email</string>
+    <string name="password">Contraseña</string>
+    <string name="next">Siguiente</string>
+    <string name="login_error">Error al iniciar sesión</string>
+
+    <!-- Home Screen -->
+    <string name="add_task">Añadir tarea</string>
+    <string name="priority">Prioridad</string>
+    <string name="high_priority">Alta</string>
+    <string name="medium_priority">Media</string>
+    <string name="low_priority">Baja</string>
+    <string name="completed_tasks">Completadas</string>
+    <string name="pending_tasks">Por hacer</string>
+    <string name="see_all">Ver todas</string>
+    <string name="updating_task">Actualizando tarea...</string>
+    <string name="deleting_task">Eliminando tarea...</string>
+    <string name="previous">← Anterior</string>
+    <string name="next_page">Siguiente →</string>
+    <string name="page">Página %1$d</string>
+    <string name="toggle_task_title">Cambiar estado de tarea</string>
+    <string name="mark_as_pending">¿Marcar \'%1$s\' como pendiente?</string>
+    <string name="mark_as_completed">¿Marcar \'%1$s\' como completada?</string>
+    <string name="change_task_state">¿Cambiar estado de esta tarea?</string>
+    <string name="confirm">Confirmar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete_task_title">Eliminar tarea</string>
+    <string name="delete_task_message">¿Eliminar \'%1$s\'?</string>
+    <string name="delete_task_generic">¿Eliminar esta tarea?</string>
+    <string name="delete">Eliminar</string>
+    <string name="error_prefix">Error: %1$s</string>
+    <string name="update_task_error">Error al actualizar la tarea: %1$s</string>
+    <string name="delete_task_error">Error al eliminar: %1$s</string>
+    <string name="load_tasks_error">No se pudieron cargar las tareas</string>
+
+    <!-- Task Creation/Edit Screen -->
+    <string name="new_task">Nueva Tarea</string>
+    <string name="edit_task">Editar Tarea</string>
+    <string name="back">Volver</string>
+    <string name="task_information">Información de la Tarea</string>
+    <string name="title">Título</string>
+    <string name="description">Descripción</string>
+    <string name="title_required">El título es obligatorio</string>
+    <string name="priority_required">Selecciona una prioridad</string>
+    <string name="update">Actualizar</string>
+    <string name="save">Guardar</string>
+    <string name="confirm_update">¿Estás seguro de que quieres actualizar esta tarea?</string>
+    <string name="confirm_save">¿Estás seguro de que quieres guardar esta tarea?</string>
+    <string name="task_updated_success">¡Tarea actualizada exitosamente!</string>
+    <string name="task_created_success">¡Tarea creada exitosamente!</string>
+    <string name="load_task_error">Error al cargar la tarea: %1$s</string>
+    <string name="update_task_error_creation">Error al actualizar la tarea: %1$s</string>
+    <string name="create_task_error">Error al crear la tarea: %1$s</string>
+
+    <!-- Task Card -->
+    <string name="edit_task_action">Editar tarea</string>
+    <string name="delete_task_action">Eliminar tarea</string>
+    <string name="priority_label">Prioridad: %1$s</string>
+    <string name="normal_priority">Normal</string>
+
+    <!-- Filter Bar -->
+    <string name="search">Buscar</string>
+    <string name="clear_search">Limpiar búsqueda</string>
+    <string name="search_tasks">Buscar tareas</string>
+    <string name="status">Estado</string>
+    <string name="all">Todos</string>
+    <string name="completed">Completadas</string>
+    <string name="pending">Pendientes</string>
+    <string name="sort_by">Ordenar por</string>
+    <string name="default_sort">Predeterminado</string>
+    <string name="high_to_low">Alta a baja</string>
+    <string name="low_to_high">Baja a alta</string>
+    <string name="hide_filters">Ocultar filtros</string>
+    <string name="show_filters">Mostrar filtros</string>
+    <string name="filter">Filtrar</string>
+
+    <!-- Header -->
+    <string name="hello_user">Hola %1$s</string>
+    <string name="pending_tasks_count">%1$d Tareas Pendientes</string>
+</resources>

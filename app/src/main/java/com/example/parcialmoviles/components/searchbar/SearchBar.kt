@@ -21,12 +21,12 @@ fun SearchBar() {
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFF5F5F5)
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 1.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -35,7 +35,7 @@ fun SearchBar() {
                 tint = Color.Gray
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(1.dp))
 
             BasicTextField(
                 value = searchText,

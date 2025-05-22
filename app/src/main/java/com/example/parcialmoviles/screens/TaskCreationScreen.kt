@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.parcialmoviles.R
 import com.example.parcialmoviles.components.CustomTextField.CustomTextField
 import com.example.parcialmoviles.components.customButton.CustomButton
 import com.example.parcialmoviles.components.priorityDropdown.PriorityDropdown
@@ -26,7 +27,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TaskCreationScreen(
     navController: NavController,
-    taskId: Int? = null // Si es null, es creación; si tiene valor, es edición
+    taskId: Int? = null
 ) {
     val context = LocalContext.current
     val taskRepository = remember { TaskRepository(context) }
@@ -43,7 +44,6 @@ fun TaskCreationScreen(
 
     val isEditMode = taskId != null
 
-    // Cargar datos de la tarea si estamos en modo edición
     LaunchedEffect(taskId) {
         if (taskId != null) {
             isLoadingTask = true
@@ -54,14 +54,14 @@ fun TaskCreationScreen(
                         title = task.name
                         description = task.description ?: ""
                         selectedPriority = when (task.priority) {
-                            1 -> PriorityOption("Baja", 1)
-                            2 -> PriorityOption("Media", 2)
-                            3 -> PriorityOption("Alta", 3)
+                            1 -> PriorityOption(context.getString(R.string.low_priority), 1)
+                            2 -> PriorityOption(context.getString(R.string.medium_priority), 2)
+                            3 -> PriorityOption(context.getString(R.string.high_priority), 3)
                             else -> null
                         }
                     },
                     onFailure = { exception ->
-                        errorMessage = "Error al cargar la tarea: ${exception.message}"
+                        errorMessage = context.getString(R.string.load_task_error, exception.message)
                     }
                 )
             } finally {
@@ -75,7 +75,7 @@ fun TaskCreationScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isEditMode) "Editar Tarea" else "Nueva Tarea",
+                        text = if (isEditMode) context.getString(R.string.edit_task) else context.getString(R.string.new_task),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -84,7 +84,7 @@ fun TaskCreationScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = context.getString(R.string.back)
                         )
                     }
                 }
@@ -117,7 +117,7 @@ fun TaskCreationScreen(
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text(
-                                text = "Información de la Tarea",
+                                text = context.getString(R.string.task_information),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -126,14 +126,14 @@ fun TaskCreationScreen(
                             CustomTextField(
                                 value = title,
                                 onValueChange = { title = it },
-                                placeholder = "Título",
+                                placeholder = context.getString(R.string.title),
                                 icon = Icons.Default.Edit
                             )
 
                             CustomTextField(
                                 value = description,
                                 onValueChange = { description = it },
-                                placeholder = "Descripción",
+                                placeholder = context.getString(R.string.description),
                                 icon = Icons.Default.Info
                             )
 
@@ -166,7 +166,8 @@ fun TaskCreationScreen(
                             )
                         ) {
                             Text(
-                                text = if (isEditMode) "¡Tarea actualizada exitosamente!" else "¡Tarea creada exitosamente!",
+                                text = if (isEditMode) context.getString(R.string.task_updated_success)
+                                else context.getString(R.string.task_created_success),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(16.dp)
                             )
@@ -184,14 +185,15 @@ fun TaskCreationScreen(
                         }
                     } else {
                         CustomButton(
-                            text = if (isEditMode) "Actualizar" else "Guardar",
+                            text = if (isEditMode) context.getString(R.string.update)
+                            else context.getString(R.string.save),
                             onClick = {
                                 if (title.isBlank()) {
-                                    errorMessage = "El título es obligatorio"
+                                    errorMessage = context.getString(R.string.title_required)
                                     return@CustomButton
                                 }
                                 if (selectedPriority == null) {
-                                    errorMessage = "Selecciona una prioridad"
+                                    errorMessage = context.getString(R.string.priority_required)
                                     return@CustomButton
                                 }
 
@@ -208,13 +210,14 @@ fun TaskCreationScreen(
 
     ConfirmationDialog(
         isVisible = showConfirmDialog,
-        title = "Confirmar",
+        title = context.getString(R.string.confirm),
         message = if (isEditMode)
-            "¿Estás seguro de que quieres actualizar esta tarea?"
+            context.getString(R.string.confirm_update)
         else
-            "¿Estás seguro de que quieres guardar esta tarea?",
-        confirmButtonText = if (isEditMode) "Actualizar" else "Guardar",
-        cancelButtonText = "Cancelar",
+            context.getString(R.string.confirm_save),
+        confirmButtonText = if (isEditMode) context.getString(R.string.update)
+        else context.getString(R.string.save),
+        cancelButtonText = context.getString(R.string.cancel),
         onConfirm = {
             showConfirmDialog = false
             isLoading = true
@@ -239,26 +242,23 @@ fun TaskCreationScreen(
                     onSuccess = {
                         showSuccess = true
                         if (!isEditMode) {
-                            // Solo limpiar campos en modo creación
                             title = ""
                             description = ""
                             selectedPriority = null
                         }
 
-                        // Ocultar mensaje de éxito después de 2 segundos
                         kotlinx.coroutines.delay(2000)
                         showSuccess = false
 
                         if (isEditMode) {
-                            // En modo edición, volver a la pantalla anterior
                             navController.popBackStack()
                         }
                     },
                     onFailure = { exception ->
                         errorMessage = if (isEditMode)
-                            "Error al actualizar la tarea: ${exception.message}"
+                            context.getString(R.string.update_task_error_creation, exception.message)
                         else
-                            "Error al crear la tarea: ${exception.message}"
+                            context.getString(R.string.create_task_error, exception.message)
                     }
                 )
 

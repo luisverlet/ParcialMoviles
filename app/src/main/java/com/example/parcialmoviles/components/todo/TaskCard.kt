@@ -3,7 +3,6 @@ package com.example.parcialmoviles
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,11 +15,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.parcialmoviles.model.Task
+import com.example.parcialmoviles.R
 
 @Composable
 fun TaskCard(
@@ -29,18 +30,12 @@ fun TaskCard(
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
+    val context = LocalContext.current
     val backgroundColor = when (task.priority) {
-        3 -> MaterialTheme.colorScheme.errorContainer // Alta - Rojo
-        2 -> Color(0xFFFFF3CD) // Media - Amarillo
-        1 -> MaterialTheme.colorScheme.primaryContainer // Baja - Verde
+        3 -> MaterialTheme.colorScheme.errorContainer
+        2 -> MaterialTheme.colorScheme.tertiaryContainer
+        1 -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surface
-    }
-
-    val borderColor = when (task.priority) {
-        3 -> MaterialTheme.colorScheme.error // Alta - Rojo
-        2 -> Color(0xFFFFD60A) // Media - Amarillo
-        1 -> MaterialTheme.colorScheme.primary // Baja - Verde
-        else -> MaterialTheme.colorScheme.outline
     }
 
     Card(
@@ -50,7 +45,6 @@ fun TaskCard(
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
-        border = BorderStroke(1.dp, borderColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -80,16 +74,15 @@ fun TaskCard(
                     )
                 }
 
-                // Indicador de prioridad con colores
                 val (priorityText, priorityColor) = when (task.priority) {
-                    3 -> "Alta" to MaterialTheme.colorScheme.error
-                    2 -> "Media" to Color(0xFFFFB000)
-                    1 -> "Baja" to MaterialTheme.colorScheme.primary
-                    else -> "Normal" to MaterialTheme.colorScheme.onSurfaceVariant
+                    3 -> context.getString(R.string.high_priority) to MaterialTheme.colorScheme.error
+                    2 -> context.getString(R.string.medium_priority) to MaterialTheme.colorScheme.tertiaryContainer
+                    1 -> context.getString(R.string.low_priority) to MaterialTheme.colorScheme.primary
+                    else -> context.getString(R.string.normal_priority) to MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
                 Text(
-                    text = "Prioridad: $priorityText",
+                    text = context.getString(R.string.priority_label, priorityText),
                     fontSize = 12.sp,
                     color = priorityColor,
                     fontWeight = FontWeight.Medium,
@@ -106,7 +99,7 @@ fun TaskCard(
                 IconButton(onClick = onEdit) {
                     Icon(
                         Icons.Default.Edit,
-                        contentDescription = "Editar tarea",
+                        contentDescription = context.getString(R.string.edit_task_action),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -114,7 +107,7 @@ fun TaskCard(
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar tarea",
+                        contentDescription = context.getString(R.string.delete_task_action),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }

@@ -15,6 +15,8 @@ import com.example.parcialmoviles.components.CustomTextField.CustomTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.ui.res.stringResource
+import com.example.parcialmoviles.R
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -30,15 +32,15 @@ fun LoginScreen(navController: NavController) {
             .fillMaxSize()
             .padding(24.dp)
     ) {
-        Text("Bienvenido", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.welcome), style = MaterialTheme.typography.headlineLarge)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("A tu app ToDoList", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.app_subtitle), style = MaterialTheme.typography.bodySmall)
         Spacer(modifier = Modifier.height(32.dp))
 
         CustomTextField(
             email,
             { email = it },
-            "Email",
+            stringResource(R.string.email),
             icon = Icons.Filled.Email,
             isPassword = false
         )
@@ -47,19 +49,19 @@ fun LoginScreen(navController: NavController) {
         CustomTextField(
             password,
             { password = it },
-            "Contraseña",
+            stringResource(R.string.password),
             isPassword = true,
             icon = Icons.Filled.Lock
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        CustomButton("Next", {
+        CustomButton(stringResource(R.string.next), {
             scope.launch {
                 val result = repo.login(email, password)
                 result.onSuccess {
                     navController.navigate("home")
                 }.onFailure {
-                    Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Login Error", Toast.LENGTH_SHORT).show()
                 }
             }
         }, modifier = Modifier.fillMaxWidth())

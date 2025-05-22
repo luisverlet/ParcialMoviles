@@ -1,6 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">parcialMoviles</string>
-    <string name="search_tasks">Buscar tareas</string>
-    <string name="clear_search">Limpiar busqueda</string>
-    <string name="search">Buscar</string>
+    <string name="app_name" translatable="false">parcialMoviles</string>
+    <!-- Login Screen -->
+    <string name="welcome">Welcome</string>
+    <string name="app_subtitle">To your ToDoList app</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="next">Next</string>
+    <string name="login_error">Login error</string>
+
+    <!-- Home Screen -->
+    <string name="add_task">Add task</string>
+    <string name="priority">Priority</string>
+    <string name="high_priority">High</string>
+    <string name="medium_priority">Medium</string>
+    <string name="low_priority">Low</string>
+    <string name="completed_tasks">Completed</string>
+    <string name="pending_tasks">To do</string>
+    <string name="see_all">See all</string>
+    <string name="updating_task">Updating task...</string>
+    <string name="deleting_task">Deleting task...</string>
+    <string name="previous">← Previous</string>
+    <string name="next_page">Next →</string>
+    <string name="page">Page %1$d</string>
+    <string name="toggle_task_title">Change task status</string>
+    <string name="mark_as_pending">Mark \'%1$s\' as pending?</string>
+    <string name="mark_as_completed">Mark \'%1$s\' as completed?</string>
+    <string name="change_task_state">Change this task status?</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_task_title">Delete task</string>
+    <string name="delete_task_message">Delete \'%1$s\'?</string>
+    <string name="delete_task_generic">Delete this task?</string>
+    <string name="delete">Delete</string>
+    <string name="error_prefix">Error: %1$s</string>
+    <string name="update_task_error">Error updating task: %1$s</string>
+    <string name="delete_task_error">Error deleting: %1$s</string>
+    <string name="load_tasks_error">Could not load tasks</string>
+
+    <!-- Task Creation/Edit Screen -->
+    <string name="new_task">New Task</string>
+    <string name="edit_task">Edit Task</string>
+    <string name="back">Back</string>
+    <string name="task_information">Task Information</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="title_required">Title is required</string>
+    <string name="priority_required">Select a priority</string>
+    <string name="update">Update</string>
+    <string name="save">Save</string>
+    <string name="confirm_update">Are you sure you want to update this task?</string>
+    <string name="confirm_save">Are you sure you want to save this task?</string>
+    <string name="task_updated_success">Task updated successfully!</string>
+    <string name="task_created_success">Task created successfully!</string>
+    <string name="load_task_error">Error loading task: %1$s</string>
+    <string name="update_task_error_creation">Error updating task: %1$s</string>
+    <string name="create_task_error">Error creating task: %1$s</string>
+
+    <!-- Task Card -->
+    <string name="edit_task_action">Edit task</string>
+    <string name="delete_task_action">Delete task</string>
+    <string name="priority_label">Priority: %1$s</string>
+    <string name="normal_priority">Normal</string>
+
+    <!-- Filter Bar -->
+    <string name="search">Search</string>
+    <string name="clear_search">Clear search</string>
+    <string name="search_tasks">Search tasks</string>
+    <string name="status">Status</string>
+    <string name="all">All</string>
+    <string name="completed">Completed</string>
+    <string name="pending">Pending</string>
+    <string name="sort_by">Sort by</string>
+    <string name="default_sort">Default</string>
+    <string name="high_to_low">High to low</string>
+    <string name="low_to_high">Low to high</string>
+    <string name="hide_filters">Hide filters</string>
+    <string name="show_filters">Show filters</string>
+    <string name="filter">Filter</string>
+
+    <!-- Header -->
+    <string name="hello_user">Hello %1$s</string>
+    <string name="pending_tasks_count">%1$d Pending Tasks</string>
 </resources>
