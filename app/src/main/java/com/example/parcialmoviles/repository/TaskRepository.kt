@@ -18,8 +18,13 @@ class TaskRepository(private val context: Context) {
         return try {
             val token = authRepository.getToken() ?: return Result.failure(Exception("No se encontró el token"))
             val request = CreateTaskRequest(name, description, priority)
-            ApiClient.apiService.createTask("Token $token", request)
-            Result.success(Unit)
+            val response = ApiClient.apiService.createTask("Token $token", request)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al crear tarea: ${response.code()}"))
+            }
         } catch (e: Exception) {
             Log.e("TaskRepository", "Error al crear tarea", e)
             Result.failure(e)
@@ -73,11 +78,16 @@ class TaskRepository(private val context: Context) {
     suspend fun toggleTaskCompletion(taskId: Int, completed: Boolean): Result<Unit> {
         return try {
             val token = authRepository.getToken() ?: return Result.failure(Exception("No se encontró el token"))
-            val request = UpdateTaskRequest(completed = completed)
-            ApiClient.apiService.updateTask("Token $token", taskId, request)
-            Result.success(Unit)
+            val completionData = mapOf("completed" to completed)
+            val response = ApiClient.apiService.updateTaskCompletion("Token $token", taskId, completionData)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al actualizar tarea: ${response.code()}"))
+            }
         } catch (e: Exception) {
-            Log.e("TaskRepository", "Error al actualizar tarea", e)
+            Log.e("TaskRepository", "Error al actualizar estado de tarea", e)
             Result.failure(e)
         }
     }
@@ -85,8 +95,13 @@ class TaskRepository(private val context: Context) {
     suspend fun deleteTask(taskId: Int): Result<Unit> {
         return try {
             val token = authRepository.getToken() ?: return Result.failure(Exception("No se encontró el token"))
-            ApiClient.apiService.deleteTask("Token $token", taskId)
-            Result.success(Unit)
+            val response = ApiClient.apiService.deleteTask("Token $token", taskId)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al eliminar tarea: ${response.code()}"))
+            }
         } catch (e: Exception) {
             Log.e("TaskRepository", "Error al eliminar tarea", e)
             Result.failure(e)

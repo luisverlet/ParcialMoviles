@@ -37,6 +37,16 @@ fun HomeScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    // Estados para el diálogo de confirmación de completar tarea
+    var showToggleConfirmationDialog by remember { mutableStateOf(false) }
+    var taskToToggle by remember { mutableStateOf<Task?>(null) }
+    var isUpdatingTask by remember { mutableStateOf(false) }
+
+    // Estados para el diálogo de confirmación de eliminar tarea
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+    var taskToDelete by remember { mutableStateOf<Task?>(null) }
+    var isDeletingTask by remember { mutableStateOf(false) }
+
     fun loadPriorityCounts() {
         // Calcular conteos localmente desde las tareas actuales
         priorityCounts = mapOf(
@@ -91,6 +101,82 @@ fun HomeScreen(navController: NavController) {
                 error = e.message
             } finally {
                 isLoading = false
+            }
+        }
+    }
+
+    // Función para manejar el toggle de completar tarea
+    fun handleToggleTaskCompletion(task: Task) {
+        taskToToggle = task
+        showToggleConfirmationDialog = true
+    }
+
+    fun confirmToggleTaskCompletion() {
+        taskToToggle?.let { task ->
+            coroutineScope.launch {
+                isUpdatingTask = true
+                try {
+                    val newCompletedState = !task.completed
+                    val result = taskRepository.toggleTaskCompletion(task.id, newCompletedState)
+
+                    result.onSuccess {
+                        // Actualizar el estado local de la tarea
+                        tasks = tasks.map {
+                            if (it.id == task.id) {
+                                it.copy(completed = newCompletedState)
+                            } else {
+                                it
+                            }
+                        }
+
+                        // Actualizar las listas filtradas
+                        completedTasks = tasks.filter { it.completed }
+                        pendingTasks = tasks.filter { !it.completed }
+
+                        // Actualizar conteos de prioridad
+                        loadPriorityCounts()
+
+                    }.onFailure { exception ->
+                        error = "Error al actualizar la tarea: ${exception.message}"
+                    }
+                } catch (e: Exception) {
+                    error = "Error al actualizar la tarea: ${e.message}"
+                } finally {
+                    isUpdatingTask = false
+                    showToggleConfirmationDialog = false
+                    taskToToggle = null
+                }
+            }
+        }
+    }
+
+    // Función para manejar la eliminación de tarea
+    fun handleDeleteTask(task: Task) {
+        taskToDelete = task
+        showDeleteConfirmationDialog = true
+    }
+
+    fun confirmDeleteTask() {
+        taskToDelete?.let { task ->
+            coroutineScope.launch {
+                isDeletingTask = true
+                try {
+                    taskRepository.deleteTask(task.id).onSuccess {
+                        // Actualizar el estado
+                        tasks = tasks.filter { it.id != task.id }
+                        completedTasks = tasks.filter { it.completed }
+                        pendingTasks = tasks.filter { !it.completed }
+                        loadPriorityCounts()
+                    }.onFailure { e ->
+                        error = "Error al eliminar: ${e.message}"
+                    }
+                } catch (e: Exception) {
+                    error = "Error al eliminar: ${e.message}"
+                } finally {
+                    isDeletingTask = false
+                    showDeleteConfirmationDialog = false
+                    taskToDelete = null
+                }
             }
         }
     }
@@ -179,8 +265,8 @@ fun HomeScreen(navController: NavController) {
                                 items(completedTasks) { task ->
                                     TaskCard(
                                         task = task,
-                                        onToggleComplete = { /* TODO */ },
-                                        onDelete = { /* TODO */ }
+                                        onToggleComplete = { handleToggleTaskCompletion(task) },
+                                        onDelete = { handleDeleteTask(task) }
                                     )
                                 }
                             }
@@ -193,8 +279,8 @@ fun HomeScreen(navController: NavController) {
                                 items(pendingTasks) { task ->
                                     TaskCard(
                                         task = task,
-                                        onToggleComplete = { /* TODO */ },
-                                        onDelete = { /* TODO */ }
+                                        onToggleComplete = { handleToggleTaskCompletion(task) },
+                                        onDelete = { handleDeleteTask(task) }
                                     )
                                 }
                             }
@@ -202,6 +288,56 @@ fun HomeScreen(navController: NavController) {
                             // Espaciador para asegurar que la paginación no se superponga con el FAB
                             item {
                                 Spacer(modifier = Modifier.height(80.dp))
+                            }
+                        }
+                    }
+
+                    // Indicador de carga para actualización de tarea
+                    if (isUpdatingTask) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Text("Actualizando tarea...")
+                                }
+                            }
+                        }
+                    }
+
+                    // Indicador de carga para eliminación de tarea
+                    if (isDeletingTask) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Text("Eliminando tarea...")
+                                }
                             }
                         }
                     }
@@ -246,6 +382,42 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
             }
+        }
+    )
+
+    // Diálogo de confirmación para toggle de completar
+    ConfirmationDialog(
+        isVisible = showToggleConfirmationDialog,
+        title = "Cambiar estado de tarea",
+        message = taskToToggle?.let { task ->
+            if (task.completed) {
+                "¿Estás seguro de que quieres marcar '${task.name}' como pendiente?"
+            } else {
+                "¿Estás seguro de que quieres marcar '${task.name}' como completada?"
+            }
+        } ?: "¿Estás seguro de que quieres cambiar el estado de esta tarea?",
+        confirmButtonText = "Confirmar",
+        cancelButtonText = "Cancelar",
+        onConfirm = { confirmToggleTaskCompletion() },
+        onCancel = {
+            showToggleConfirmationDialog = false
+            taskToToggle = null
+        }
+    )
+
+    // Diálogo de confirmación para eliminar
+    ConfirmationDialog(
+        isVisible = showDeleteConfirmationDialog,
+        title = "Eliminar tarea",
+        message = taskToDelete?.let { task ->
+            "¿Estás seguro de que quieres eliminar la tarea '${task.name}'? Esta acción no se puede deshacer."
+        } ?: "¿Estás seguro de que quieres eliminar esta tarea?",
+        confirmButtonText = "Eliminar",
+        cancelButtonText = "Cancelar",
+        onConfirm = { confirmDeleteTask() },
+        onCancel = {
+            showDeleteConfirmationDialog = false
+            taskToDelete = null
         }
     )
 }

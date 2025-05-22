@@ -63,12 +63,3 @@ val md_theme_dark_inversePrimary = Color(0xFF006C4C)
 val md_theme_dark_surfaceTint = Color(0xFF6CDBAC)
 val md_theme_dark_outlineVariant = Color(0xFF3F4945)
 val md_theme_dark_scrim = Color(0xFF000000)
-
-// Colores específicos para prioridades (se integrarán con el theme)
-val md_theme_light_priorityHigh = md_theme_light_errorContainer
-val md_theme_light_priorityMedium = Color(0xFFFFF4DE)  // Amarillo pastel
-val md_theme_light_priorityLow = md_theme_light_primaryContainer
-
-val md_theme_dark_priorityHigh = md_theme_dark_errorContainer
-val md_theme_dark_priorityMedium = Color(0xFF5E4B00)   // Amarillo oscuro
-val md_theme_dark_priorityLow = md_theme_dark_primaryContainer

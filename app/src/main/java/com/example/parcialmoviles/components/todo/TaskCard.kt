@@ -28,15 +28,17 @@ fun TaskCard(
     onDelete: () -> Unit
 ) {
     val backgroundColor = when (task.priority) {
-        2 -> Color(0xFFFFF3CD) // Amarillo claro para prioridad media
-        3 -> MaterialTheme.colorScheme.errorContainer // Rojo claro para prioridad alta
-        else -> MaterialTheme.colorScheme.surface // Color normal para prioridad baja
+        3 -> MaterialTheme.colorScheme.errorContainer // Alta - Rojo
+        2 -> Color(0xFFFFF3CD) // Media - Amarillo
+        1 -> MaterialTheme.colorScheme.primaryContainer // Baja - Verde
+        else -> MaterialTheme.colorScheme.surface
     }
 
     val borderColor = when (task.priority) {
-        2 -> Color(0xFFFFD60A) // Amarillo más fuerte para el borde
-        3 -> MaterialTheme.colorScheme.error // Rojo para el borde
-        else -> MaterialTheme.colorScheme.outline // Color normal para el borde
+        3 -> MaterialTheme.colorScheme.error // Alta - Rojo
+        2 -> Color(0xFFFFD60A) // Media - Amarillo
+        1 -> MaterialTheme.colorScheme.primary // Baja - Verde
+        else -> MaterialTheme.colorScheme.outline
     }
 
     Card(
@@ -63,29 +65,32 @@ fun TaskCard(
                     text = task.name,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None
                 )
                 if (!task.description.isNullOrBlank()) {
                     Text(
                         text = task.description,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
+                        textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None
                     )
                 }
 
-                // Indicador de prioridad
-                val priorityText = when (task.priority) {
-                    3 -> "Alta"
-                    2 -> "Media"
-                    1 -> "Baja"
-                    else -> "Normal"
+                // Indicador de prioridad con colores
+                val (priorityText, priorityColor) = when (task.priority) {
+                    3 -> "Alta" to MaterialTheme.colorScheme.error
+                    2 -> "Media" to Color(0xFFFFB000)
+                    1 -> "Baja" to MaterialTheme.colorScheme.primary
+                    else -> "Normal" to MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
                 Text(
                     text = "Prioridad: $priorityText",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = priorityColor,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
