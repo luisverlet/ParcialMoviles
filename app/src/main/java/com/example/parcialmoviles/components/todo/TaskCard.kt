@@ -3,6 +3,7 @@ package com.example.parcialmoviles
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,110 +14,94 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.parcialmoviles.model.Task
 
 @Composable
 fun TaskCard(
-    todoItem: TodoItem,
+    task: Task,
     onToggleComplete: () -> Unit,
     onDelete: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-    val backgroundColor = if (todoItem.isCompleted) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    } else {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+    val backgroundColor = when (task.priority) {
+        2 -> Color(0xFFFFF3CD) // Amarillo claro para prioridad media
+        3 -> MaterialTheme.colorScheme.errorContainer // Rojo claro para prioridad alta
+        else -> MaterialTheme.colorScheme.surface // Color normal para prioridad baja
     }
 
-    val textDecoration = if (todoItem.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+    val borderColor = when (task.priority) {
+        2 -> Color(0xFFFFD60A) // Amarillo más fuerte para el borde
+        3 -> MaterialTheme.colorScheme.error // Rojo para el borde
+        else -> MaterialTheme.colorScheme.outline // Color normal para el borde
+    }
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = backgroundColor
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = todoItem.isCompleted,
-                        onCheckedChange = { onToggleComplete() },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = MaterialTheme.colorScheme.primary,
-                            uncheckedColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
+                Text(
+                    text = task.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (!task.description.isNullOrBlank()) {
                     Text(
-                        text = todoItem.title,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            textDecoration = textDecoration,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        text = task.description,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
 
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (expanded) "Mostrar menos" else "Mostrar más",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                // Indicador de prioridad
+                val priorityText = when (task.priority) {
+                    3 -> "Alta"
+                    2 -> "Media"
+                    1 -> "Baja"
+                    else -> "Normal"
                 }
+
+                Text(
+                    text = "Prioridad: $priorityText",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
             }
 
-            // Descripción y botón eliminar (solo cuando expandido)
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 40.dp, top = 8.dp, bottom = 8.dp)
-                ) {
-                    Text(
-                        text = if (!todoItem.description.isNullOrEmpty()) todoItem.description else "Sin descripción",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            textDecoration = textDecoration,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
+            Row {
+                Checkbox(
+                    checked = task.completed,
+                    onCheckedChange = { onToggleComplete() }
+                )
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        IconButton(
-                            onClick = onDelete,
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Eliminar tarea"
-                            )
-                        }
-                    }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Eliminar tarea",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }

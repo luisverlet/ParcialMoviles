@@ -1,4 +1,4 @@
-package com.example.parcialmoviles
+package com.example.parcialmoviles.components.header
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
