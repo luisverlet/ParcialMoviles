@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
@@ -25,7 +26,8 @@ import com.example.parcialmoviles.model.Task
 fun TaskCard(
     task: Task,
     onToggleComplete: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
     val backgroundColor = when (task.priority) {
         3 -> MaterialTheme.colorScheme.errorContainer // Alta - Rojo
@@ -100,6 +102,14 @@ fun TaskCard(
                     checked = task.completed,
                     onCheckedChange = { onToggleComplete() }
                 )
+
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Editar tarea",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
 
                 IconButton(onClick = onDelete) {
                     Icon(

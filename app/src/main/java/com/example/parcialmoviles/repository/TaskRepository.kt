@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.parcialmoviles.api.ApiClient
 import com.example.parcialmoviles.model.CreateTaskRequest
+import com.example.parcialmoviles.model.Task
 import com.example.parcialmoviles.model.TaskResponse
 import com.example.parcialmoviles.model.UpdateTaskRequest
 import kotlinx.coroutines.flow.Flow
@@ -31,10 +32,23 @@ class TaskRepository(private val context: Context) {
         }
     }
 
-    fun getTasks(page: Int? = null, completed: Boolean? = null, priority: Int? = null): Flow<Result<TaskResponse>> = flow {
+    fun getTasks(
+        page: Int? = null,
+        completed: Boolean? = null,
+        priority: Int? = null,
+        search: String? = null,
+        ordering: String? = null
+    ): Flow<Result<TaskResponse>> = flow {
         try {
             val token = authRepository.getToken() ?: throw Exception("No se encontró el token")
-            val response = ApiClient.apiService.getTasks("Token $token", page, completed, priority)
+            val response = ApiClient.apiService.getTasks(
+                "Token $token",
+                page,
+                completed,
+                priority,
+                search,
+                ordering
+            )
             emit(Result.success(response))
         } catch (e: Exception) {
             Log.e("TaskRepository", "Error al obtener tareas", e)
@@ -46,13 +60,11 @@ class TaskRepository(private val context: Context) {
         return try {
             val token = authRepository.getToken() ?: return Result.failure(Exception("No se encontró el token"))
 
-            // Extraer los parámetros de la URL
             val uri = android.net.Uri.parse(url)
             val page = uri.getQueryParameter("page")?.toIntOrNull()
             val completed = uri.getQueryParameter("completed")?.toBoolean()
             val priority = uri.getQueryParameter("priority")?.toIntOrNull()
 
-            // Usar el método getTasks existente con los parámetros extraídos
             val response = ApiClient.apiService.getTasks("Token $token", page, completed, priority)
             Result.success(response)
         } catch (e: Exception) {
@@ -104,6 +116,50 @@ class TaskRepository(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e("TaskRepository", "Error al eliminar tarea", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getTask(taskId: Int): Result<Task> {
+        return try {
+            val token = authRepository.getToken()
+            if (token.isNullOrBlank()) {
+                return Result.failure(Exception("Token no encontrado"))
+            }
+
+            val task =  ApiClient.apiService.getTask("Token $token", taskId)
+            Result.success(task)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateTask(
+        taskId: Int,
+        name: String,
+        description: String?,
+        priority: Int
+    ): Result<Unit> {
+        return try {
+            val token = authRepository.getToken()
+            if (token.isNullOrBlank()) {
+                return Result.failure(Exception("Token no encontrado"))
+            }
+
+            val request = UpdateTaskRequest(
+                name = name,
+                description = description,
+                priority = priority
+            )
+
+            val response =  ApiClient.apiService.updateTask("Token $token", taskId, request)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error del servidor: ${response.code()}"))
+            }
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

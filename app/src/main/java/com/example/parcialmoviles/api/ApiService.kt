@@ -3,6 +3,7 @@ package com.example.parcialmoviles.api
 import com.example.parcialmoviles.model.AuthRequest
 import com.example.parcialmoviles.model.AuthResponse
 import com.example.parcialmoviles.model.CreateTaskRequest
+import com.example.parcialmoviles.model.Task
 import com.example.parcialmoviles.model.TaskResponse
 import com.example.parcialmoviles.model.UpdateTaskRequest
 import retrofit2.Response
@@ -28,13 +29,21 @@ interface ApiService {
 
     @GET("tasks/")
     suspend fun getTasks(
-        @Header("Authorization") authorization: String,
+        @Header("Authorization") token: String,
         @Query("page") page: Int? = null,
         @Query("completed") completed: Boolean? = null,
-        @Query("priority") priority: Int? = null
+        @Query("priority") priority: Int? = null,
+        @Query("search") search: String? = null,
+        @Query("ordering") ordering: String? = null
     ): TaskResponse
 
-    @PUT("tasks/{id}/")
+    @GET("tasks/{id}/")
+    suspend fun getTask(
+        @Header("Authorization") authorization: String,
+        @Path("id") taskId: Int
+    ): Task
+
+    @PATCH("tasks/{id}/")
     suspend fun updateTask(
         @Header("Authorization") authorization: String,
         @Path("id") taskId: Int,

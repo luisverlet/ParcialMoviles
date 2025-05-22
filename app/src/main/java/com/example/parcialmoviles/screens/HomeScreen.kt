@@ -14,11 +14,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.parcialmoviles.components.confirmationDialog.ConfirmationDialog
+import com.example.parcialmoviles.components.filter.FilterBar
 import com.example.parcialmoviles.components.header.Header
 import com.example.parcialmoviles.model.Task
 import com.example.parcialmoviles.repository.TaskRepository
 import kotlinx.coroutines.launch
-import com.example.parcialmoviles.components.confirmationDialog.ConfirmationDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +28,7 @@ fun HomeScreen(navController: NavController) {
     val taskRepository = remember { TaskRepository(context) }
     val coroutineScope = rememberCoroutineScope()
 
+    // Estados principales
     var tasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var completedTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
     var pendingTasks by remember { mutableStateOf<List<Task>>(emptyList()) }
@@ -37,18 +39,20 @@ fun HomeScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // Estados para el diálogo de confirmación de completar tarea
+    // Estados para filtros
+    var searchQuery by remember { mutableStateOf("") }
+    var completedFilter by remember { mutableStateOf<Boolean?>(null) }
+    var ordering by remember { mutableStateOf<String?>(null) }
+
+    // Estados para diálogos
     var showToggleConfirmationDialog by remember { mutableStateOf(false) }
     var taskToToggle by remember { mutableStateOf<Task?>(null) }
     var isUpdatingTask by remember { mutableStateOf(false) }
-
-    // Estados para el diálogo de confirmación de eliminar tarea
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     var isDeletingTask by remember { mutableStateOf(false) }
 
     fun loadPriorityCounts() {
-        // Calcular conteos localmente desde las tareas actuales
         priorityCounts = mapOf(
             "high" to tasks.count { it.priority == 3 },
             "medium" to tasks.count { it.priority == 2 },
@@ -64,35 +68,35 @@ fun HomeScreen(navController: NavController) {
                     taskRepository.getTasksByUrl(url)
                 } else {
                     var taskResponse: com.example.parcialmoviles.model.TaskResponse? = null
-                    taskRepository.getTasks(page).collect { result ->
+                    taskRepository.getTasks(
+                        page = page,
+                        completed = completedFilter,
+                        search = if (searchQuery.isNotEmpty()) searchQuery else null,
+                        ordering = ordering
+                    ).collect { result ->
                         result.onSuccess { response ->
                             taskResponse = response
                         }.onFailure { exception ->
                             error = exception.message
                         }
                     }
-                    if (taskResponse != null) Result.success(taskResponse!!) else Result.failure(Exception("No se pudieron cargar las tareas"))
+                    taskResponse?.let { Result.success(it) } ?: Result.failure(Exception("No se pudieron cargar las tareas"))
                 }
 
                 result.onSuccess { taskResponse ->
                     tasks = taskResponse.results
                     completedTasks = tasks.filter { it.completed }
                     pendingTasks = tasks.filter { !it.completed }
-
-                    // Extraer número de página de las URLs
                     nextPageUrl = taskResponse.next
                     previousPageUrl = taskResponse.previous
 
-                    // Actualizar número de página actual
                     if (page != null) {
                         currentPageNumber = page
                     } else if (url != null) {
-                        // Extraer número de página de la URL
                         val pageParam = url.substringAfter("page=").substringBefore("&")
                         currentPageNumber = pageParam.toIntOrNull() ?: currentPageNumber
                     }
 
-                    // Cargar conteos de prioridad
                     loadPriorityCounts()
                 }.onFailure { exception ->
                     error = exception.message
@@ -105,7 +109,7 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // Función para manejar el toggle de completar tarea
+    // Funciones para manejar tareas (toggle y delete)
     fun handleToggleTaskCompletion(task: Task) {
         taskToToggle = task
         showToggleConfirmationDialog = true
@@ -120,22 +124,10 @@ fun HomeScreen(navController: NavController) {
                     val result = taskRepository.toggleTaskCompletion(task.id, newCompletedState)
 
                     result.onSuccess {
-                        // Actualizar el estado local de la tarea
-                        tasks = tasks.map {
-                            if (it.id == task.id) {
-                                it.copy(completed = newCompletedState)
-                            } else {
-                                it
-                            }
-                        }
-
-                        // Actualizar las listas filtradas
+                        tasks = tasks.map { if (it.id == task.id) it.copy(completed = newCompletedState) else it }
                         completedTasks = tasks.filter { it.completed }
                         pendingTasks = tasks.filter { !it.completed }
-
-                        // Actualizar conteos de prioridad
                         loadPriorityCounts()
-
                     }.onFailure { exception ->
                         error = "Error al actualizar la tarea: ${exception.message}"
                     }
@@ -150,7 +142,6 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // Función para manejar la eliminación de tarea
     fun handleDeleteTask(task: Task) {
         taskToDelete = task
         showDeleteConfirmationDialog = true
@@ -162,7 +153,6 @@ fun HomeScreen(navController: NavController) {
                 isDeletingTask = true
                 try {
                     taskRepository.deleteTask(task.id).onSuccess {
-                        // Actualizar el estado
                         tasks = tasks.filter { it.id != task.id }
                         completedTasks = tasks.filter { it.completed }
                         pendingTasks = tasks.filter { !it.completed }
@@ -181,7 +171,12 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
+    // Cargar tareas iniciales y cuando cambian los filtros
     LaunchedEffect(Unit) {
+        loadTasks(1)
+    }
+
+    LaunchedEffect(searchQuery, completedFilter, ordering) {
         loadTasks(1)
     }
 
@@ -200,13 +195,21 @@ fun HomeScreen(navController: NavController) {
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp)
             ) {
-                // Header fijo
+                // Header
                 Header(name = "Luis Alejandro", pendingTasks = pendingTasks.size)
 
-                // SearchBar fijo
-                SearchBar()
+                // Componente de filtros
+                FilterBar(
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    completedFilter = completedFilter,
+                    onCompletedFilterChange = { completedFilter = it },
+                    ordering = ordering,
+                    onOrderingChange = { ordering = it },
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-                // Sección de Prioridad fija
+                // Sección de Prioridad
                 Text(
                     text = "Prioridad",
                     fontSize = 16.sp,
@@ -237,14 +240,10 @@ fun HomeScreen(navController: NavController) {
                     )
                 }
 
-                // Contenido principal que ocupa el espacio restante
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                // Contenido principal
+                Box(modifier = Modifier.weight(1f)) {
                     if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     } else if (error != null) {
                         Text(
                             text = "Error: $error",
@@ -252,174 +251,147 @@ fun HomeScreen(navController: NavController) {
                             modifier = Modifier.align(Alignment.Center)
                         )
                     } else {
-                        // LazyColumn que ocupa todo el espacio disponible
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Sección de tareas completadas
                             if (completedTasks.isNotEmpty()) {
-                                item {
-                                    TaskSectionHeader(title = "Completadas")
-                                }
+                                item { TaskSectionHeader(title = "Completadas") }
                                 items(completedTasks) { task ->
                                     TaskCard(
                                         task = task,
                                         onToggleComplete = { handleToggleTaskCompletion(task) },
-                                        onDelete = { handleDeleteTask(task) }
+                                        onDelete = { handleDeleteTask(task) },
+                                        onEdit = {
+                                            navController.navigate("task_creation/${task.id}")
+                                        }
                                     )
                                 }
                             }
 
-                            // Sección de tareas pendientes
                             if (pendingTasks.isNotEmpty()) {
-                                item {
-                                    TaskSectionHeader(title = "Por hacer")
-                                }
+                                item { TaskSectionHeader(title = "Por hacer") }
                                 items(pendingTasks) { task ->
                                     TaskCard(
                                         task = task,
                                         onToggleComplete = { handleToggleTaskCompletion(task) },
-                                        onDelete = { handleDeleteTask(task) }
+                                        onDelete = { handleDeleteTask(task) },
+                                        onEdit = {
+
+                                            navController.navigate("task_creation/${task.id}")
+                                        }
                                     )
                                 }
                             }
 
-                            // Espaciador para asegurar que la paginación no se superponga con el FAB
-                            item {
-                                Spacer(modifier = Modifier.height(80.dp))
-                            }
+                            item { Spacer(modifier = Modifier.height(80.dp)) }
                         }
                     }
 
-                    // Indicador de carga para actualización de tarea
                     if (isUpdatingTask) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Card(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Text("Actualizando tarea...")
-                                }
-                            }
-                        }
+                        LoadingIndicator(message = "Actualizando tarea...")
                     }
 
-                    // Indicador de carga para eliminación de tarea
                     if (isDeletingTask) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Card(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Text("Eliminando tarea...")
-                                }
-                            }
-                        }
+                        LoadingIndicator(message = "Eliminando tarea...")
                     }
                 }
 
-                // Controles de paginación fijos en la parte inferior
+                // Paginación
                 if (previousPageUrl != null || nextPageUrl != null) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
-                            onClick = {
-                                previousPageUrl?.let { url ->
-                                    loadTasks(url = url)
-                                }
-                            },
-                            enabled = previousPageUrl != null
-                        ) {
-                            Text("← Anterior")
-                        }
-
-                        Text(
-                            text = "Página $currentPageNumber",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        TextButton(
-                            onClick = {
-                                nextPageUrl?.let { url ->
-                                    loadTasks(url = url)
-                                }
-                            },
-                            enabled = nextPageUrl != null
-                        ) {
-                            Text("Siguiente →")
-                        }
-                    }
+                    PaginationControls(
+                        previousPageUrl = previousPageUrl,
+                        nextPageUrl = nextPageUrl,
+                        currentPageNumber = currentPageNumber,
+                        onPreviousPage = { previousPageUrl?.let { loadTasks(url = it) } },
+                        onNextPage = { nextPageUrl?.let { loadTasks(url = it) } }
+                    )
                 }
             }
         }
     )
 
-    // Diálogo de confirmación para toggle de completar
+    // Diálogos de confirmación
     ConfirmationDialog(
         isVisible = showToggleConfirmationDialog,
         title = "Cambiar estado de tarea",
         message = taskToToggle?.let { task ->
-            if (task.completed) {
-                "¿Estás seguro de que quieres marcar '${task.name}' como pendiente?"
-            } else {
-                "¿Estás seguro de que quieres marcar '${task.name}' como completada?"
-            }
-        } ?: "¿Estás seguro de que quieres cambiar el estado de esta tarea?",
+            if (task.completed) "¿Marcar '${task.name}' como pendiente?"
+            else "¿Marcar '${task.name}' como completada?"
+        } ?: "¿Cambiar estado de esta tarea?",
         confirmButtonText = "Confirmar",
         cancelButtonText = "Cancelar",
         onConfirm = { confirmToggleTaskCompletion() },
-        onCancel = {
-            showToggleConfirmationDialog = false
-            taskToToggle = null
-        }
+        onCancel = { showToggleConfirmationDialog = false; taskToToggle = null }
     )
 
-    // Diálogo de confirmación para eliminar
     ConfirmationDialog(
         isVisible = showDeleteConfirmationDialog,
         title = "Eliminar tarea",
-        message = taskToDelete?.let { task ->
-            "¿Estás seguro de que quieres eliminar la tarea '${task.name}'? Esta acción no se puede deshacer."
-        } ?: "¿Estás seguro de que quieres eliminar esta tarea?",
+        message = taskToDelete?.let { "¿Eliminar '${it.name}'?" } ?: "¿Eliminar esta tarea?",
         confirmButtonText = "Eliminar",
         cancelButtonText = "Cancelar",
         onConfirm = { confirmDeleteTask() },
-        onCancel = {
-            showDeleteConfirmationDialog = false
-            taskToDelete = null
-        }
+        onCancel = { showDeleteConfirmationDialog = false; taskToDelete = null }
     )
+}
+
+@Composable
+private fun LoadingIndicator(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(message)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaginationControls(
+    previousPageUrl: String?,
+    nextPageUrl: String?,
+    currentPageNumber: Int,
+    onPreviousPage: () -> Unit,
+    onNextPage: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextButton(
+            onClick = onPreviousPage,
+            enabled = previousPageUrl != null
+        ) {
+            Text("← Anterior")
+        }
+
+        Text(
+            text = "Página $currentPageNumber",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        TextButton(
+            onClick = onNextPage,
+            enabled = nextPageUrl != null
+        ) {
+            Text("Siguiente →")
+        }
+    }
 }
 
 @Composable
@@ -434,57 +406,9 @@ fun TaskSectionHeader(title: String) {
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
-
         Text(
             text = "Ver todas",
             fontSize = 12.sp
         )
-    }
-}
-
-@Composable
-fun TaskSection(
-    title: String,
-    tasks: List<Task>,
-    onToggleComplete: (Task) -> Unit,
-    onDelete: (Task) -> Unit
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "Ver todas",
-                fontSize = 12.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = if (tasks.isEmpty()) 0.dp else 100.dp, max = 200.dp)
-        ) {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(tasks) { task ->
-                    TaskCard(
-                        task = task,
-                        onToggleComplete = { onToggleComplete(task) },
-                        onDelete = { onDelete(task) }
-                    )
-                }
-            }
-        }
     }
 }
