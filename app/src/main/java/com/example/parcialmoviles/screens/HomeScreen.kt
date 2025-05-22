@@ -234,7 +234,6 @@ fun HomeScreen(navController: NavController) {
                     )
                 }
 
-                // Contenido principal
                 Box(modifier = Modifier.weight(1f)) {
                     if (isLoading) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -291,7 +290,6 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
 
-                // Paginación
                 if (previousPageUrl != null || nextPageUrl != null) {
                     PaginationControls(
                         previousPageUrl = previousPageUrl,
@@ -305,7 +303,6 @@ fun HomeScreen(navController: NavController) {
         }
     )
 
-    // Diálogos de confirmación
     ConfirmationDialog(
         isVisible = showToggleConfirmationDialog,
         title = stringResource(R.string.toggle_task_title),
@@ -399,10 +396,6 @@ fun TaskSectionHeader(title: String) {
             text = title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = stringResource(R.string.see_all),
-            fontSize = 12.sp
         )
     }
 }
